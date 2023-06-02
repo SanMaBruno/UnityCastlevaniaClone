@@ -3,9 +3,13 @@ using System.Collections.Generic;
 using Unity.VisualScripting;
 using UnityEngine;
 
-public class HeroController : MonoBehaviour
+public class HeroController : MonoBehaviour, ITargetCombat
 
 {
+    [Header("Health Variables")]
+    [SerializeField] int health = 10;
+    [SerializeField] DamageFeedbackEffect damageFeedbackEffect;
+
     [Header("Attack Variables")]
 
     [SerializeField] SwordController swordController;
@@ -19,16 +23,21 @@ public class HeroController : MonoBehaviour
 
     [Header("Boolean Variables")]
     public bool playerIsAttacking;
-
+    public bool playerIsRecovering;
     public bool canDoubleJump;
+    public bool isLookingRight;
 
     [Header("Interruption Variables")]
     public bool canCheckGround;
     public bool canMove;
 
+    public bool canFlip;
+
 
 
     [Header("Rigid Variables")]
+    [SerializeField] private float damageForce;
+    [SerializeField] private float damageForceUp;
 
     [SerializeField] private float jumpForce;
     [SerializeField] private float doubleForce;
@@ -99,15 +108,18 @@ public class HeroController : MonoBehaviour
 
     void HandleFlip()
     {
+        if (!canFlip) return;
         if (rigidbody2D.velocity.magnitude > 0)
         {
             if (rigidbody2D.velocity.x >= 0)
             {
                 this.transform.rotation = Quaternion.Euler(0, 0, 0);
+                isLookingRight = true;
             }
             else
             {
                 this.transform.rotation = Quaternion.Euler(0, 180, 0);
+                isLookingRight = false; 
             }
         }
     }
@@ -134,7 +146,7 @@ public class HeroController : MonoBehaviour
         {
             animatorController.Play(AnimationId.Attack);
             playerIsAttacking = true;
-            swordController.Attack(0.4f);
+            swordController.Attack(0.1f,0.3f);
             StartCoroutine(RestoreAttack());
         }
     }
@@ -163,6 +175,40 @@ public class HeroController : MonoBehaviour
         if (!playerIsAttacking)
             animatorController.Play(AnimationId.Jump);
         canCheckGround = true;
+    }
+
+    public void TakeDamage(int damagePoints)
+    {
+        if (!playerIsRecovering)
+        {
+            health = Mathf.Clamp(health - damagePoints, 0, 10);
+            StartCoroutine(StartPlayerRecover());
+            if (isLookingRight)
+            {
+                rigidbody2D.AddForce(Vector2.left * damageForce + Vector2.up * damageForceUp, ForceMode2D.Impulse);
+            }
+            else
+            {
+                rigidbody2D.AddForce(Vector2.right * damageForce + Vector2.up * damageForceUp, ForceMode2D.Impulse);
+
+            }
+        }
+    }
+    IEnumerator StartPlayerRecover()
+    {
+        canMove = false;
+        canFlip = false;
+        animatorController.Play(AnimationId.Hurt);
+        yield return new WaitForSeconds(0.2f);
+        canMove = true;
+        canFlip = true;
+        rigidbody2D.velocity = Vector2.zero;
+        playerIsRecovering = true;
+        damageFeedbackEffect.PlayBlinkDamageEffect();
+        yield return new WaitForSeconds(2);
+        damageFeedbackEffect.StopPlayBlinkDamageEffect();
+        playerIsRecovering = false;
+
     }
 }
     

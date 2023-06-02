@@ -16,18 +16,25 @@ public class SwordController : MonoBehaviour
         collider2D.enabled = false;
     }
 
-    public void Attack(float attackDuration)
+    public void Attack(float delay, float attackDuration)
     {
 
-        collider2D.enabled = true;
-        StartCoroutine(_Attack(attackDuration));
+        StartCoroutine(_Attack(delay,attackDuration));
 
     }
-    private IEnumerator _Attack(float attackDuration)
+    private IEnumerator _Attack(float delay, float attackDuration)
     {
+        yield return new WaitForSeconds(delay);
+        collider2D.enabled = true;
+
+
         yield return new WaitForSeconds(attackDuration);
 
         collider2D.enabled = false;
+
+        yield return new WaitForSeconds(attackDuration);
+
+        Awake();
 
     }
 
