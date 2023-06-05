@@ -44,6 +44,10 @@ public class HeroController : MonoBehaviour, ITargetCombat
 
     [SerializeField] private float speed;
 
+    [Header("Audio ")]
+    [SerializeField] AudioClip attackSfx;
+
+
     //Control Variables
     [SerializeField] private Vector2 movementDirection;
     private bool jumPressed = false;
@@ -108,7 +112,7 @@ public class HeroController : MonoBehaviour, ITargetCombat
 
     void HandleFlip()
     {
-        if (!canFlip) return;
+        //if (!canFlip) return;
         if (rigidbody2D.velocity.magnitude > 0)
         {
             if (rigidbody2D.velocity.x >= 0)
@@ -144,6 +148,7 @@ public class HeroController : MonoBehaviour, ITargetCombat
     {
         if (attackPressed && !playerIsAttacking)
         {
+            AudioManager.Instance.PlaySfx(attackSfx);
             animatorController.Play(AnimationId.Attack);
             playerIsAttacking = true;
             swordController.Attack(0.1f,0.3f);
