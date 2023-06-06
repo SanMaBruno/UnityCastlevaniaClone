@@ -7,6 +7,7 @@ public class SpellLauncherController : MonoBehaviour
     [SerializeField] GameObject projectilePrefab;
     [SerializeField] float force;
 
+
     public void Launch(Vector2 direction)
     {
         GameObject go = Instantiate(projectilePrefab,this.transform.position, Quaternion.identity);

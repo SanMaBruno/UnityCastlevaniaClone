@@ -6,6 +6,12 @@ using UnityEngine;
 public class HeroController : MonoBehaviour, ITargetCombat
 
 {
+    [Header("Power Up Cooldown")]
+    [SerializeField] private float powerUpCooldown = 5f;
+    private bool canUsePowerUp = true;
+
+
+
     [Header("Power Up ")]
     [SerializeField] private PowerUpId currentPowerUp;
     [SerializeField] private int powerUpAmount;
@@ -200,33 +206,44 @@ public class HeroController : MonoBehaviour, ITargetCombat
             animatorController.Play(AnimationId.Jump);
         canMove = true;
     }
-void HandleUsePowerUp()
-{
-    if (attackPressed && !playerIsUsingPowerUp && currentPowerUp != PowerUpId.Nothing)
+    void HandleUsePowerUp()
     {
-        AudioManager.Instance.PlaySfx(attackSfx);
-        animatorController.Play(AnimationId.UsePowerUp);
-        playerIsUsingPowerUp = true;
-
-        if(currentPowerUp == PowerUpId.BluePotion)
+        if (usePowerUpPressed && !playerIsUsingPowerUp && currentPowerUp != PowerUpId.Nothing && canUsePowerUp)
         {
-            bluePotionLauncher.Launch((Vector2)transform.right + Vector2.up*0.3f);
-        }      
-        if(currentPowerUp == PowerUpId.RedPotion)
-        {
-            Vector2 direction = isLookingRight ? Vector2.right : Vector2.left;
-            redPotionLauncher.Launch(direction);
-        }
+            AudioManager.Instance.PlaySfx(attackSfx);
+            animatorController.Play(AnimationId.UsePowerUp);
+            playerIsUsingPowerUp = true;
 
-        StartCoroutine(RestoreAttack());
+            if (currentPowerUp == PowerUpId.BluePotion)
+            {
+                bluePotionLauncher.Launch((Vector2)transform.right + Vector2.up * 0.3f);
+            }
+            if (currentPowerUp == PowerUpId.RedPotion)
+            {
+                Vector2 direction = isLookingRight ? Vector2.right : Vector2.left;
+                redPotionLauncher.Launch(direction);
+            }
 
-        powerUpAmount--;
-        if(powerUpAmount <= 0)
-        {
-            currentPowerUp = PowerUpId.Nothing;
+            StartCoroutine(RestoreUsePowerUp());
+
+            powerUpAmount--;
+            if (powerUpAmount <= 0)
+            {
+                currentPowerUp = PowerUpId.Nothing;
+            }
+
+            canUsePowerUp = false;
+            StartCoroutine(PowerUpCooldown());
         }
     }
-}
+
+
+    IEnumerator PowerUpCooldown()
+    {
+        yield return new WaitForSeconds(powerUpCooldown);
+        canUsePowerUp = true;
+    }
+
 
 
     IEnumerator RestoreUsePowerUp()
