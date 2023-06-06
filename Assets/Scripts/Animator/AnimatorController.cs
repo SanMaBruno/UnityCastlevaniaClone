@@ -10,7 +10,8 @@ public enum AnimationId
     PrepareJump = 2,
     Jump = 3,
     Attack = 4,
-    Hurt = 5
+    Hurt = 5,
+    UsePowerUp = 6,
 }
 
 public class AnimatorController : MonoBehaviour

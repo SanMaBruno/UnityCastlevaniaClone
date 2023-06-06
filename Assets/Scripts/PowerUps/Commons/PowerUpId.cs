@@ -2,10 +2,9 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public enum TagId
+public enum PowerUpId
 {
-    Player = 0,
-    Enemy = 1,
-    Ground = 2
+    Nothing = 0,
+    BluePotion= 1,
+    RedPotion = 2
 }
-

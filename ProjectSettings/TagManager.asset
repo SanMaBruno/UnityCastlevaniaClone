@@ -5,6 +5,7 @@ TagManager:
   serializedVersion: 2
   tags:
   - Enemy
+  - Ground
   layers:
   - Default
   - TransparentFX
@@ -53,4 +54,7 @@ TagManager:
     locked: 0
   - name: Characters
     uniqueID: 783645597
+    locked: 0
+  - name: PowerUps
+    uniqueID: 2566921807
     locked: 0

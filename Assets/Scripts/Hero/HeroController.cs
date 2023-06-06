@@ -6,6 +6,13 @@ using UnityEngine;
 public class HeroController : MonoBehaviour, ITargetCombat
 
 {
+    [Header("Power Up ")]
+    [SerializeField] private PowerUpId currentPowerUp;
+    [SerializeField] private int powerUpAmount;
+    [SerializeField] SpellLauncherController bluePotionLauncher;
+    [SerializeField] SpellLauncherController redPotionLauncher;
+
+
     [Header("Health Variables")]
     [SerializeField] int health = 10;
     [SerializeField] DamageFeedbackEffect damageFeedbackEffect;
@@ -23,6 +30,7 @@ public class HeroController : MonoBehaviour, ITargetCombat
 
     [Header("Boolean Variables")]
     public bool playerIsAttacking;
+    public bool playerIsUsingPowerUp;
     public bool playerIsRecovering;
     public bool canDoubleJump;
     public bool isLookingRight;
@@ -52,11 +60,27 @@ public class HeroController : MonoBehaviour, ITargetCombat
     [SerializeField] private Vector2 movementDirection;
     private bool jumPressed = false;
     private bool attackPressed = false;
+    private bool usePowerUpPressed = false;
 
 
     private bool playerIsOnGround;
 
     private Rigidbody2D rigidbody2D;
+
+    public static HeroController instance;
+
+    private void Awake()
+    {
+        if (instance == null)
+        {
+            instance = this;
+            DontDestroyOnLoad(gameObject);
+        }
+        else
+        {
+            Destroy(this.gameObject);
+        }
+    }
 
     void Start()
     {
@@ -74,6 +98,14 @@ public class HeroController : MonoBehaviour, ITargetCombat
         HandleFlip();
         HandleJump();
         HandleAttack();
+        HandleUsePowerUp();
+    }
+
+    public void ChangePowerUp(PowerUpId powerUpId, int amount)
+    {
+        currentPowerUp = powerUpId;
+        powerUpAmount = amount;
+        Debug.Log(currentPowerUp);
     }
 
     void HandleIsGrounding()
@@ -88,6 +120,7 @@ public class HeroController : MonoBehaviour, ITargetCombat
         movementDirection = new Vector2(Input.GetAxis("Horizontal"), Input.GetAxis("Vertical"));
         jumPressed = Input.GetButtonDown("Jump");
         attackPressed = Input.GetButtonDown("Attack");
+        usePowerUpPressed = Input.GetButtonDown("UsePowerUp");
     }
 
     void HandleMovement()
@@ -163,6 +196,46 @@ public class HeroController : MonoBehaviour, ITargetCombat
         canMove = false;
         yield return new WaitForSeconds(0.30f);
         playerIsAttacking = false;
+        if (!playerIsOnGround)
+            animatorController.Play(AnimationId.Jump);
+        canMove = true;
+    }
+void HandleUsePowerUp()
+{
+    if (attackPressed && !playerIsUsingPowerUp && currentPowerUp != PowerUpId.Nothing)
+    {
+        AudioManager.Instance.PlaySfx(attackSfx);
+        animatorController.Play(AnimationId.UsePowerUp);
+        playerIsUsingPowerUp = true;
+
+        if(currentPowerUp == PowerUpId.BluePotion)
+        {
+            bluePotionLauncher.Launch((Vector2)transform.right + Vector2.up*0.3f);
+        }      
+        if(currentPowerUp == PowerUpId.RedPotion)
+        {
+            Vector2 direction = isLookingRight ? Vector2.right : Vector2.left;
+            redPotionLauncher.Launch(direction);
+        }
+
+        StartCoroutine(RestoreAttack());
+
+        powerUpAmount--;
+        if(powerUpAmount <= 0)
+        {
+            currentPowerUp = PowerUpId.Nothing;
+        }
+    }
+}
+
+
+    IEnumerator RestoreUsePowerUp()
+    {
+        if (playerIsOnGround)
+            canMove = false;
+        canMove = false;
+        yield return new WaitForSeconds(0.30f);
+        playerIsUsingPowerUp = false;
         if (!playerIsOnGround)
             animatorController.Play(AnimationId.Jump);
         canMove = true;
